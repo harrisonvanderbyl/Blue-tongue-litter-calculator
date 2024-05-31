@@ -1,0 +1,511 @@
+<!-- Description: A simple calculator for morphs of lizards -->
+<!-- get chart library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div style=" background: #aaaaff">
+    <!-- key: -->
+    <!-- empty checkbox is nothing, partial is a lizard with a het trait, checked is a lizard with a visual trait -->
+    <!-- show key for user -->
+    <div>
+        <h1>Key</h1>
+    </div>
+    <div>
+        <input type="checkbox" id="nothing" name="nothing" value="nothing" disabled>
+        <label for="white">Nothing</label>
+
+        <input type="checkbox" id="het" name="het" value="het" disabled>
+        <label for="black">Het</label>
+
+        <input type="checkbox" id="visual" name="visual" value="visual" disabled>
+        <label for="albino">Visual</label>
+    </div>
+
+
+    <div>
+
+        <h1>Lizard 1</h1>
+        <!-- 3 tier checkbox for all of [white, black, albino, Anery], checkbox either empty, checked, or partial -->
+        <div>
+            <input type="checkbox" id="white" name="white" value="white">
+            <label for="white">White</label>
+
+            <input type="checkbox" id="black" name="black" value="black">
+            <label for="black">Black</label>
+
+            <input type="checkbox" id="albino" name="albino" value="albino">
+            <label for="albino">Albino</label>
+
+            <input type="checkbox" id="Anery" name="Anery" value="Anery">
+            <label for="Anery">Anery</label>
+
+        </div>
+    </div>
+    <div>
+        <h1>Lizard 2</h1>
+        <!-- 3 tier checkbox for all of [white, black, albino, Anery], checkbox either empty, checked, or partial -->
+        <div>
+            <input type="checkbox" id="white" name="white" value="white">
+            <label for="white">White</label>
+
+            <input type="checkbox" id="black" name="black" value="black">
+            <label for="black">Black</label>
+
+            <input type="checkbox" id="albino" name="albino" value="albino">
+            <label for="albino">Albino</label>
+
+            <input type="checkbox" id="Anery" name="Anery" value="Anery">
+            <label for="Anery">Anery</label>
+
+        </div>
+
+    </div>
+    <div>
+        <h1>Result</h1>
+        <!-- chances of each gene -->
+        <div class="result" style="width: 50%; height: 50%">
+            <!-- pie graph-->
+            <div>
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+    <script>
+        // when checkbox is clicked, state goes intermediate -> checked -> unchecked -> intermediate
+
+        //start
+        // 1. get all checkboxes
+        // 2. add event listener to each checkbox
+        // 3. when checkbox is clicked, change state
+        // 4. when state is changed, update checkbox
+        // 5. when checkbox is updated, update result
+
+        // 1. get all checkboxes
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const checkboxesArray = Array.from(checkboxes);
+        const checkboxesMap = new Map();
+        checkboxesArray.forEach(checkbox => {
+            checkboxesMap.set(checkbox, 'unchecked');
+        });
+
+        // set het to intermediate
+        checkboxesMap.set(checkboxesArray[1], 'intermediate');
+
+        // set visual to checked
+        checkboxesMap.set(checkboxesArray[2], 'checked');
+
+        // display first 3 checkboxes
+        // update the first 3 checkboxes
+        checkboxesArray.forEach(checkbox => {
+            const currentState = checkboxesMap.get(checkbox);
+            if (currentState === 'unchecked') {
+                checkbox.checked = false;
+                checkbox.indeterminate = false;
+            } else if (currentState === 'checked') {
+                checkbox.checked = true;
+                checkbox.indeterminate = false;
+            } else if (currentState === 'intermediate') {
+                checkbox.checked = false;
+                checkbox.indeterminate = true;
+            }
+        });
+
+        // 2. add event listener to each checkbox
+        checkboxesArray.forEach(checkbox => {
+            checkbox.addEventListener('click', () => {
+                // 3. when checkbox is clicked, change state
+                const currentState = checkboxesMap.get(checkbox);
+                let newState = '';
+                if (currentState === 'unchecked') {
+                    newState = 'intermediate';
+                } else if (currentState === 'checked') {
+                    newState = 'unchecked';
+                } else if (currentState === 'intermediate') {
+                    newState = 'checked';
+                }
+                checkboxesMap.set(checkbox, newState);
+                // 4. when state is changed, update checkbox
+                if (newState === 'unchecked') {
+                    checkbox.checked = false;
+                    checkbox.indeterminate = false;
+                } else if (newState === 'checked') {
+                    checkbox.checked = true;
+                    checkbox.indeterminate = false;
+                } else if (newState === 'intermediate') {
+                    checkbox.checked = false;
+                    checkbox.indeterminate = true;
+                }
+                // 5. when checkbox is updated, update result
+                updateResult();
+            });
+        });
+
+        function updateResult() {
+
+
+
+            // update result
+            const result = document.querySelector('.result');
+            resultwidth = result.clientWidth;
+            resultheight = result.clientHeight;
+            // get checked checkboxes for lizards 1 and 2
+            const lizard1 = checkboxesArray.slice(3, 7);
+            const lizard2 = checkboxesArray.slice(7, 11);
+
+            var ctx = document.getElementById('myChart').getContext('2d');
+
+            // destroy old canvas and replace with new one
+            ctx.canvas.remove();
+            const newCanvas = document.createElement('canvas');
+            newCanvas.id = 'myChart';
+            newCanvas.width = 128;
+            newCanvas.height = 128;
+
+            result.appendChild(newCanvas);
+
+            ctx = document.getElementById('myChart')
+
+            // gene percentages is nothing + nothing = 0% het, 0% visual
+            // gene percentages is nothing + het = 50% het, 0% visual
+            // gene percentages is nothing + visual = 100% het, 0% visual
+            // gene percentages is het + visual = 50% het, 50% visual
+            // gene percentages is het + het = 50% het, 25% visual, 25% nothing, aka, 25% visual, 75% (66% chance het)
+            // gene percentages is visual + visual = 0% het, 100% visual
+
+            // get gene percentages
+            const whitevisual = getGenePercentagesVisual(lizard1[0], lizard2[0]);
+            const blackvisual = getGenePercentagesVisual(lizard1[1], lizard2[1]);
+            const albinovisual = getGenePercentagesVisual(lizard1[2], lizard2[2]);
+            const Aneryvisual = getGenePercentagesVisual(lizard1[3], lizard2[3]);
+
+            const whitehet = getGenePercentagesHet(lizard1[0], lizard2[0]);
+            const blackhet = getGenePercentagesHet(lizard1[1], lizard2[1]);
+            const albinohet = getGenePercentagesHet(lizard1[2], lizard2[2]);
+            const Aneryhet = getGenePercentagesHet(lizard1[3], lizard2[3]);
+
+            const whiteNothing = 100 - whitehet - whitevisual;
+            const blackNothing = 100 - blackhet - blackvisual;
+            const albinoNothing = 100 - albinohet - albinovisual;
+            const AneryNothing = 100 - Aneryhet - Aneryvisual;
+
+            class lizardType {
+                constructor() {
+                    this.white1 = 0;
+                    this.black1 = 0;
+                    this.albino1 = 0;
+                    this.Anery1 = 0;
+                    this.white2 = 0;
+                    this.black2 = 0;
+                    this.albino2 = 0;
+                    this.Anery2 = 0;
+                }
+
+                getNumber() {
+                    var startnum = 1000;
+                    if (this.white1 + this.white2 == 2) {
+                        startnum *= whitevisual / 100;
+                    }
+                    if (this.black1 + this.black2 == 2) {
+                        startnum *= blackvisual / 100;
+                    }
+                    if (this.albino1 + this.albino2 == 2) {
+                        startnum *= albinovisual / 100;
+                    }
+                    if (this.Anery1 + this.Anery2 == 2) {
+                        startnum *= Aneryvisual / 100;
+                    }
+
+                    if (this.white1 + this.white2 == 1) {
+                        startnum *= whitehet / 100;
+                    }
+                    if (this.black1 + this.black2 == 1) {
+                        startnum *= blackhet / 100;
+                    }
+                    if (this.albino1 + this.albino2 == 1) {
+                        startnum *= albinohet / 100;
+                    }
+                    if (this.Anery1 + this.Anery2 == 1) {
+                        startnum *= Aneryhet / 100;
+                    }
+
+                    if (this.white1 + this.white2 == 0) {
+                        startnum *= whiteNothing / 100;
+                    }
+                    if (this.black1 + this.black2 == 0) {
+                        startnum *= blackNothing / 100;
+                    }
+                    if (this.albino1 + this.albino2 == 0) {
+                        startnum *= albinoNothing / 100;
+                    }
+                    if (this.Anery1 + this.Anery2 == 0) {
+                        startnum *= AneryNothing / 100;
+                    }
+
+                    return startnum;
+                }
+
+                getColor() {
+                    // color cyan, magenta, yellow, black
+                    const context = ctx.getContext('2d');
+                    const pattern = context.createRadialGradient(resultheight / 2, resultheight / 2, 0, resultheight / 2, resultheight / 2, resultheight / 2);
+                    
+                    var colors = []
+                    if (this.white1 + this.white2 > 1) {
+                        colors.push('rgba(255, 255, 255, 1)');
+                    }
+                    if (this.black1 + this.black2 > 1) {
+                        colors.push('rgba(0, 0, 0, 1)');
+                    }
+                    if (this.albino1 + this.albino2 > 1) {
+                        colors.push('rgba(255, 128, 128, 1)');
+                    }
+                    if (this.Anery1 + this.Anery2 > 1) {
+                        colors.push('rgba(64, 64, 64, 1)');
+                    }
+
+                    if (this.white1 + this.white2 > 0 && this.white1 + this.white2 < 2) {
+                        colors.push('rgba(255, 255, 255, 0.5)');
+                    }
+
+                    if (this.black1 + this.black2 > 0 && this.black1 + this.black2 < 2) {
+                        colors.push('rgba(0, 0, 0, 0.5)');
+                    }
+
+                    if (this.albino1 + this.albino2 > 0 && this.albino1 + this.albino2 < 2) {
+                        colors.push('rgba(255, 128, 128, 0.5)');
+                    }
+
+                    if (this.Anery1 + this.Anery2 > 0 && this.Anery1 + this.Anery2 < 2) {
+                        colors.push('rgba(64, 64, 64, 0.5)');
+                    }
+
+                    // repeat colors 8 times
+                    for (var i = 0; i < 3; i++) {
+                        colors = colors.concat(colors);
+                    }
+
+                    for (var i = 0; i < colors.length; i++) {
+                        pattern.addColorStop(i / colors.length, colors[i]);
+                    }
+
+                    
+                    return pattern
+
+                }
+
+                getName() {
+                    var name = "";
+                    if (this.white1 + this.white2 > 1) {
+                        name += "Visual White,";
+                    }
+                    if (this.black1 + this.black2 > 1) {
+                        name += "Visual Black,";
+                    }
+                    if (this.albino1 + this.albino2 > 1) {
+                        name += "Visual Alb,";
+                    }
+                    if (this.Anery1 + this.Anery2 > 1) {
+                        name += "Visual Annery,";
+                    }
+
+                    if (this.white1 + this.white2 > 0 && this.white1 + this.white2 < 2) {
+                        name += "Het White,";
+                    }
+
+                    if (this.black1 + this.black2 > 0 && this.black1 + this.black2 < 2) {
+                        name += "Het Black,";
+                    }
+
+                    if (this.albino1 + this.albino2 > 0 && this.albino1 + this.albino2 < 2) {
+                        name += "Het Alb,";
+                    }
+
+                    if (this.Anery1 + this.Anery2 > 0 && this.Anery1 + this.Anery2 < 2) {
+                        name += "Het Annery";
+                    }
+
+                    if (this.white1 + this.white2 == 0 && this.black1 + this.black2 == 0 && this.albino1 + this.albino2 == 0 && this.Anery1 + this.Anery2 == 0) {
+                        name += "Nothing";
+                    }
+                    return name;
+                }
+            }
+
+            var lizards = [];
+
+            for (var i = 0; i < 2; i++) {
+                for (var j = 0; j < 2; j++) {
+                    for (var k = 0; k < 2; k++) {
+                        for (var l = 0; l < 2; l++) {
+                            for (var m = 0; m < 2; m++) {
+                                for (var n = 0; n < 2; n++) {
+                                    for (var o = 0; o < 2; o++) {
+                                        for (var p = 0; p < 2; p++) {
+                                            var lizard = new lizardType();
+                                            lizard.white1 = i;
+                                            lizard.black1 = j;
+                                            lizard.albino1 = k;
+                                            lizard.Anery1 = l;
+                                            lizard.white2 = m;
+                                            lizard.black2 = n;
+                                            lizard.albino2 = o;
+                                            lizard.Anery2 = p;
+                                            lizards.push(lizard);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // remove those with duplicate names
+            var uniqueLizards = [];
+
+            for (var i = 0; i < lizards.length; i++) {
+                var isUnique = true;
+                for (var j = 0; j < uniqueLizards.length; j++) {
+                    if (lizards[i].getName() == uniqueLizards[j].getName()) {
+                        isUnique = false;
+                        break;
+                    }
+                }
+                if (isUnique) {
+                    uniqueLizards.push(lizards[i]);
+                }
+            }
+
+            // rmove all lizards with 0% chance
+            uniqueLizards = uniqueLizards.filter(lizard => lizard.getNumber() > 0);
+
+            const data = {
+                labels: uniqueLizards.map(lizard => lizard.getName()),
+                datasets: [{
+                    label: 'Visual',
+                    data: uniqueLizards.map(lizard => lizard.getNumber()),
+                    backgroundColor: uniqueLizards.map(lizard => lizard.getColor()),
+                    borderColor: uniqueLizards.map(lizard => lizard.getColor()),
+                    borderWidth: 1
+                }
+                ]
+
+            };
+
+
+
+            /*const data = {
+                labels: ['Visual-White', 'Visual-Black', 'Visual-Albino', 'Visual-Anery', "Het-white", "Het-black", "Het-albino", "Het-Anery", 'Non-Visual'],
+                datasets: [{
+                    label: 'Visual',
+                    data: [whitevisual, blackvisual, albinovisual, Aneryvisual, 
+                        whitehet, blackhet, albinohet, Aneryhet,0],
+                    backgroundColor: [
+                        'rgba(255, 255, 255, 1)',
+                        'rgba(0, 0, 0, 1)',
+                        'rgba(255, 128, 128, 1)',
+                        'rgba(64, 64, 64, 1)',
+                        'rgba(255, 255, 255, 0.5)',
+                        'rgba(0, 0, 0, 0.5)',
+                        'rgba(255, 128, 128, 0.5)',
+                        'rgba(64, 64, 64, 0.5)',
+                        'rgba(255, 255, 255, 0.25)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 255, 255, 1)',
+                        'rgba(0, 0, 0, 1)',
+                        'rgba(255, 128, 128, 1)',
+                        'rgba(64, 64, 64, 1)',
+                        'rgba(255, 255, 255, 0.5)',
+                        'rgba(0, 0, 0, 0.5)',
+                        'rgba(255, 128, 128, 0.5)',
+                        'rgba(64, 64, 64, 0.5)',
+                        'rgba(255, 255, 255, 0.25)'
+                    ],
+                    borderWidth: 1
+                }
+                ]
+            };*/
+
+
+
+
+            const myChart = new Chart(ctx, {
+                type: 'pie',
+                data: data
+            }
+            );
+
+
+
+        }
+
+        function getGenePercentagesVisual(checkbox1, checkbox2) {
+            const gene1 = checkboxesMap.get(checkbox1);
+            const gene2 = checkboxesMap.get(checkbox2);
+            // just get percentage of visual
+
+            if (gene1 === 'unchecked' && gene2 === 'unchecked') {
+                return 0
+            }
+            if (gene1 === 'unchecked' && gene2 === 'intermediate') {
+                return 0
+            }
+            if (gene1 === 'unchecked' && gene2 === 'checked') {
+                return 0
+            }
+            if (gene1 === 'intermediate' && gene2 === 'unchecked') {
+                return 0
+            }
+            if (gene1 === 'intermediate' && gene2 === 'intermediate') {
+                return 25
+            }
+            if (gene1 === 'intermediate' && gene2 === 'checked') {
+                return 50
+            }
+            if (gene1 === 'checked' && gene2 === 'unchecked') {
+                return 0
+            }
+            if (gene1 === 'checked' && gene2 === 'intermediate') {
+                return 50
+            }
+            if (gene1 === 'checked' && gene2 === 'checked') {
+                return 100
+            }
+        }
+
+        function getGenePercentagesHet(checkbox1, checkbox2) {
+            const gene1 = checkboxesMap.get(checkbox1);
+            const gene2 = checkboxesMap.get(checkbox2);
+            // just get percentage of visual
+
+            if (gene1 === 'unchecked' && gene2 === 'unchecked') {
+                return 0
+            }
+            if (gene1 === 'unchecked' && gene2 === 'intermediate') {
+                return 50
+            }
+            if (gene1 === 'unchecked' && gene2 === 'checked') {
+                return 100
+            }
+            if (gene1 === 'intermediate' && gene2 === 'unchecked') {
+                return 50
+            }
+            if (gene1 === 'intermediate' && gene2 === 'intermediate') {
+                return 50
+            }
+            if (gene1 === 'intermediate' && gene2 === 'checked') {
+                return 50
+            }
+            if (gene1 === 'checked' && gene2 === 'unchecked') {
+                return 100
+            }
+            if (gene1 === 'checked' && gene2 === 'intermediate') {
+                return 50
+            }
+            if (gene1 === 'checked' && gene2 === 'checked') {
+                return 0
+            }
+        }
+
+    </script>
+</div>
