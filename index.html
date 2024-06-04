@@ -1,7 +1,7 @@
 <!-- Description: A simple calculator for morphs of lizards -->
 <!-- get chart library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<div style=" background: #aaaaff">
+<div>
     <!-- key: -->
     <!-- empty checkbox is nothing, partial is a lizard with a het trait, checked is a lizard with a visual trait -->
     <!-- show key for user -->
@@ -71,7 +71,18 @@
     </div>
     <script>
         // when checkbox is clicked, state goes intermediate -> checked -> unchecked -> intermediate
+        file = "./lizardiconop.png"
 
+        var img = new Image();
+        img.src = file;
+
+        var lizardicon;
+
+        img.onload = function() {
+            lizardicon = img;
+        }
+
+        
         //start
         // 1. get all checkboxes
         // 2. add event listener to each checkbox
@@ -150,6 +161,7 @@
             // get checked checkboxes for lizards 1 and 2
             const lizard1 = checkboxesArray.slice(3, 7);
             const lizard2 = checkboxesArray.slice(7, 11);
+
 
             var ctx = document.getElementById('myChart').getContext('2d');
 
@@ -240,55 +252,42 @@
                         startnum *= AneryNothing / 100;
                     }
 
-                    return startnum;
+                    return startnum/1000;
                 }
 
-                getColor() {
+                getColor(maxlizardheight, uniqueLizards) {
                     // color cyan, magenta, yellow, black
                     const context = ctx.getContext('2d');
-                    const pattern = context.createRadialGradient(resultheight / 2, resultheight / 2, 0, resultheight / 2, resultheight / 2, resultheight / 2);
+                   
+                    const litternumber = 24
+                    console.log(maxlizardheight)
+                    const maxlizard = maxlizardheight*litternumber
+
+                
+
+                    const blk = [0, 0, 0];
+                    const wht = [255, 255, 255];
+                    const red = [255, 0, 0];
+                    const ann = [64, 64, 64];
+                    const brn = [128, 64, 0];
+
+                    const amounts = [
+                        this.black1/2 + this.black2/2,
+                        this.white1/2 + this.white2/2,
+                        this.albino1/2 + this.albino2/2,
+                        this.Anery1/2 + this.Anery2/2,
+                        (!(this.white1 & this.white2) & !(this.black1 & this.black2) & !(this.albino1 & this.albino2) & !(this.Anery1 & this.Anery2)) ? 1 : 0
+                    ] 
+                    const amttot = amounts.reduce((a, b) => a + b, 0)
+                    const col = [
+                        blk[0]*amounts[0]/(amttot) + wht[0]*amounts[1]/(amttot) + red[0]*amounts[2]/(amttot) + ann[0]*amounts[3]/(amttot) + brn[0]*amounts[4]/(amttot),
+                        blk[1]*amounts[0]/(amttot) + wht[1]*amounts[1]/(amttot) + red[1]*amounts[2]/(amttot) + ann[1]*amounts[3]/(amttot) + brn[1]*amounts[4]/(amttot),
+                        blk[2]*amounts[0]/(amttot) + wht[2]*amounts[1]/(amttot) + red[2]*amounts[2]/(amttot) + ann[2]*amounts[3]/(amttot) + brn[2]*amounts[4]/(amttot)   
+                    ]
                     
-                    var colors = []
-                    if (this.white1 + this.white2 > 1) {
-                        colors.push('rgba(255, 255, 255, 1)');
-                    }
-                    if (this.black1 + this.black2 > 1) {
-                        colors.push('rgba(0, 0, 0, 1)');
-                    }
-                    if (this.albino1 + this.albino2 > 1) {
-                        colors.push('rgba(255, 128, 128, 1)');
-                    }
-                    if (this.Anery1 + this.Anery2 > 1) {
-                        colors.push('rgba(64, 64, 64, 1)');
-                    }
-
-                    if (this.white1 + this.white2 > 0 && this.white1 + this.white2 < 2) {
-                        colors.push('rgba(255, 255, 255, 0.5)');
-                    }
-
-                    if (this.black1 + this.black2 > 0 && this.black1 + this.black2 < 2) {
-                        colors.push('rgba(0, 0, 0, 0.5)');
-                    }
-
-                    if (this.albino1 + this.albino2 > 0 && this.albino1 + this.albino2 < 2) {
-                        colors.push('rgba(255, 128, 128, 0.5)');
-                    }
-
-                    if (this.Anery1 + this.Anery2 > 0 && this.Anery1 + this.Anery2 < 2) {
-                        colors.push('rgba(64, 64, 64, 0.5)');
-                    }
-
-                    // repeat colors 8 times
-                    for (var i = 0; i < 3; i++) {
-                        colors = colors.concat(colors);
-                    }
-
-                    for (var i = 0; i < colors.length; i++) {
-                        pattern.addColorStop(i / colors.length, colors[i]);
-                    }
-
                     
-                    return pattern
+                    
+                    return `rgba(${col[0]}, ${col[1]}, ${col[2]}, 1)`;
 
                 }
 
@@ -377,14 +376,15 @@
 
             // rmove all lizards with 0% chance
             uniqueLizards = uniqueLizards.filter(lizard => lizard.getNumber() > 0);
-
+            numbers = uniqueLizards.map(lizard => lizard.getNumber())
+            maxnumber = Math.max(...numbers)
             const data = {
                 labels: uniqueLizards.map(lizard => lizard.getName()),
                 datasets: [{
                     label: 'Visual',
-                    data: uniqueLizards.map(lizard => lizard.getNumber()),
-                    backgroundColor: uniqueLizards.map(lizard => lizard.getColor()),
-                    borderColor: uniqueLizards.map(lizard => lizard.getColor()),
+                    data: numbers,
+                    backgroundColor: uniqueLizards.map(lizard => lizard.getColor(maxnumber, uniqueLizards.length)),
+                    borderColor: uniqueLizards.map(lizard => lizard.getColor(maxnumber, uniqueLizards.length)),
                     borderWidth: 1
                 }
                 ]
@@ -430,6 +430,7 @@
 
 
             const myChart = new Chart(ctx, {
+                // bar chart
                 type: 'pie',
                 data: data
             }
