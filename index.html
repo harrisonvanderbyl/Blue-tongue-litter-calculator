@@ -293,39 +293,108 @@
 
                 getName() {
                     var name = "";
-                    if (this.white1 + this.white2 > 1) {
-                        name += "Visual White,";
+
+                    var hasvisualwhite = this.white1 && this.white2;
+                    var hasvisualblack = this.black1 && this.black2;
+                    var hasvisualalbino = this.albino1 && this.albino2;
+                    var hasvisualAnery = this.Anery1 && this.Anery2; 
+
+                    var isWhite = hasvisualwhite && !hasvisualblack && !hasvisualalbino && !hasvisualAnery;
+                    var isBlack = hasvisualblack && !hasvisualwhite && !hasvisualalbino && !hasvisualAnery;
+                    var isAlbino = hasvisualalbino && !hasvisualwhite && !hasvisualblack && !hasvisualAnery;
+                    var isAnery = hasvisualAnery && !hasvisualwhite && !hasvisualblack && !hasvisualalbino;
+
+                    var isPlatinum = hasvisualwhite && hasvisualblack && !hasvisualalbino && !hasvisualAnery;
+                    var isAlabaster = hasvisualwhite && hasvisualAnery && !hasvisualblack && !hasvisualalbino;
+                    var isSunglow = hasvisualwhite && hasvisualalbino && !hasvisualblack && !hasvisualAnery;
+                    
+                    var isLava = hasvisualblack && hasvisualalbino && !hasvisualwhite && !hasvisualAnery;
+                    var isBlackout = hasvisualblack && hasvisualAnery && !hasvisualwhite && !hasvisualalbino;
+                    
+                    var isSnow = hasvisualalbino && hasvisualAnery && !hasvisualwhite && !hasvisualblack;
+                    
+                    var isVisAllgene = hasvisualblack && hasvisualwhite && hasvisualalbino && hasvisualAnery;
+                    var isHyperSunglow = hasvisualblack && !hasvisualwhite && hasvisualalbino && hasvisualAnery;
+                    var isPearl = hasvisualblack && hasvisualwhite && !hasvisualalbino && hasvisualAnery;
+                    var isSunkissed = hasvisualblack && hasvisualwhite && hasvisualalbino && !hasvisualAnery;
+                    var isMoonglow = !hasvisualblack && hasvisualwhite && hasvisualalbino && hasvisualAnery;
+
+                    var isGarden = !hasvisualblack && !hasvisualwhite && !hasvisualalbino && !hasvisualAnery;
+
+                    if (isWhite) {
+                        name += "Visual White";
                     }
-                    if (this.black1 + this.black2 > 1) {
-                        name += "Visual Black,";
+                    if (isBlack) {
+                        name += "Visual Black";
                     }
-                    if (this.albino1 + this.albino2 > 1) {
-                        name += "Visual Alb,";
+                    if (isAlbino) {
+                        name += "Visual Albino";
                     }
-                    if (this.Anery1 + this.Anery2 > 1) {
-                        name += "Visual Annery,";
+                    if (isAnery) {
+                        name += "Visual Anery";
+                    }
+                    if (isPlatinum) {
+                        name += "Visual Platinum";
+                    }
+                    if (isAlabaster) {
+                        name += "Visual Alabaster";
+                    }
+                    if (isSunglow) {
+                        name += "Visual Sunglow";
+                    }
+                    if (isLava) {
+                        name += "Visual Lava";
+                    }
+                    if (isBlackout) {
+                        name += "Visual Blackout";
+                    }
+                    if (isSnow) {
+                        name += "Visual Snow";
+                    }
+                    if (isVisAllgene) {
+                        name += "Visual Allgene";
+                    }
+                    if (isHyperSunglow) {
+                        name += "Visual Hyper Snow";
+                    }
+                    if (isPearl) {
+                        name += "Visual Pearl";
+                    }
+                    if (isSunkissed) {
+                        name += "Visual Sunkissed";
+                    }
+                    if (isMoonglow) {
+                        name += "Visual Moonglow";
                     }
 
+                    if (isGarden) {
+                        name += "Normal";
+                    }
+
+                    var hettwhite = this.white1 + this.white2 == 1;
+                    var hettblack = this.black1 + this.black2 == 1;
+                    var hettalbino = this.albino1 + this.albino2 == 1;
+                    var hettAnery = this.Anery1 + this.Anery2 == 1;
+
+                    var hetname = ""
+
                     if (this.white1 + this.white2 > 0 && this.white1 + this.white2 < 2) {
-                        name += "Het White,";
+                        hetname += ",Het White";
                     }
 
                     if (this.black1 + this.black2 > 0 && this.black1 + this.black2 < 2) {
-                        name += "Het Black,";
+                        hetname += ",Het Black";
                     }
 
                     if (this.albino1 + this.albino2 > 0 && this.albino1 + this.albino2 < 2) {
-                        name += "Het Alb,";
+                        hetname += ",Het Alb";
                     }
 
                     if (this.Anery1 + this.Anery2 > 0 && this.Anery1 + this.Anery2 < 2) {
-                        name += "Het Annery";
+                        hetname += ",Het Anery";
                     }
 
-                    if (this.white1 + this.white2 == 0 && this.black1 + this.black2 == 0 && this.albino1 + this.albino2 == 0 && this.Anery1 + this.Anery2 == 0) {
-                        name += "Nothing";
-                    }
-                    return name;
+                    return [name,[hettwhite, hettblack, hettalbino, hettAnery], name+hetname];
                 }
             }
 
@@ -364,7 +433,7 @@
             for (var i = 0; i < lizards.length; i++) {
                 var isUnique = true;
                 for (var j = 0; j < uniqueLizards.length; j++) {
-                    if (lizards[i].getName() == uniqueLizards[j].getName()) {
+                    if (lizards[i].getName()[2] == uniqueLizards[j].getName()[2]) {
                         isUnique = false;
                         break;
                     }
@@ -377,12 +446,78 @@
             // rmove all lizards with 0% chance
             uniqueLizards = uniqueLizards.filter(lizard => lizard.getNumber() > 0);
             numbers = uniqueLizards.map(lizard => lizard.getNumber())
+            mapofvisualnumbers = uniqueLizards.reduce((acc, lizard) => {
+                const name = lizard.getName()[0]
+                if (acc[name]) {
+                    acc[name] += lizard.getNumber()
+                } else {
+                    acc[name] = lizard.getNumber()
+                }
+                return acc
+            }, {})
+
+            mapOfPercentageHets = uniqueLizards.reduce((acc, lizard) => {
+                const name = lizard.getName()
+                const visname = name[0]
+                const hets = name[1]
+                if (!acc[visname]) {
+                    acc[visname] = {total: 0}
+                }
+                acc[visname].total += lizard.getNumber()
+                var blackhet = hets[1]
+                var whitehet = hets[0]
+                var albhet = hets[2]
+                var aneryhet = hets[3]
+                if (blackhet) {
+                    if (acc[visname]['Black']) {
+                        acc[visname]['Black'] += lizard.getNumber()
+                    } else {
+                        acc[visname]['Black'] = lizard.getNumber()
+                    }
+                }
+                if (whitehet) {
+                    if (acc[visname]['White']) {
+                        acc[visname]['White'] += lizard.getNumber()
+                    } else {
+                        acc[visname]['White'] = lizard.getNumber()
+                    }
+                }
+                if (albhet) {
+                    if (acc[visname]['Albino']) {
+                        acc[visname]['Albino'] += lizard.getNumber()
+                    } else {
+                        acc[visname]['Albino'] = lizard.getNumber()
+                    }
+                }
+
+                if (aneryhet) {
+                    if (acc[visname]['Anery']) {
+                        acc[visname]['Anery'] += lizard.getNumber()
+                    } else {
+                        acc[visname]['Anery'] = lizard.getNumber()
+                    }
+                }
+
+                return acc
+            }, {})
+
+            mapWithPercentageHets = Object.keys(mapOfPercentageHets).reduce((acc, key) => {
+                const visname = key
+                const total = mapOfPercentageHets[key].total
+                const hets = Object.keys(mapOfPercentageHets[key]).filter(key => key !== 'total')
+                const hetsWithPercentage = hets.map(het => {
+                    return ", " + String(Math.floor(mapOfPercentageHets[key][het] / total * 100)) + '% Het ' + het
+                })
+                acc[visname] = key + hetsWithPercentage.join('')
+                return acc
+            }, {})
+
             maxnumber = Math.max(...numbers)
             const data = {
-                labels: uniqueLizards.map(lizard => lizard.getName()),
+                labels: Object.keys(mapofvisualnumbers).map(key => mapWithPercentageHets[key]),
                 datasets: [{
                     label: 'Visual',
-                    data: numbers,
+                    data: Object.values(mapofvisualnumbers),
                     backgroundColor: uniqueLizards.map(lizard => lizard.getColor(maxnumber, uniqueLizards.length)),
                     borderColor: uniqueLizards.map(lizard => lizard.getColor(maxnumber, uniqueLizards.length)),
                     borderWidth: 1
@@ -393,48 +528,15 @@
 
 
 
-            /*const data = {
-                labels: ['Visual-White', 'Visual-Black', 'Visual-Albino', 'Visual-Anery', "Het-white", "Het-black", "Het-albino", "Het-Anery", 'Non-Visual'],
-                datasets: [{
-                    label: 'Visual',
-                    data: [whitevisual, blackvisual, albinovisual, Aneryvisual, 
-                        whitehet, blackhet, albinohet, Aneryhet,0],
-                    backgroundColor: [
-                        'rgba(255, 255, 255, 1)',
-                        'rgba(0, 0, 0, 1)',
-                        'rgba(255, 128, 128, 1)',
-                        'rgba(64, 64, 64, 1)',
-                        'rgba(255, 255, 255, 0.5)',
-                        'rgba(0, 0, 0, 0.5)',
-                        'rgba(255, 128, 128, 0.5)',
-                        'rgba(64, 64, 64, 0.5)',
-                        'rgba(255, 255, 255, 0.25)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 255, 255, 1)',
-                        'rgba(0, 0, 0, 1)',
-                        'rgba(255, 128, 128, 1)',
-                        'rgba(64, 64, 64, 1)',
-                        'rgba(255, 255, 255, 0.5)',
-                        'rgba(0, 0, 0, 0.5)',
-                        'rgba(255, 128, 128, 0.5)',
-                        'rgba(64, 64, 64, 0.5)',
-                        'rgba(255, 255, 255, 0.25)'
-                    ],
-                    borderWidth: 1
-                }
-                ]
-            };*/
-
-
 
 
             const myChart = new Chart(ctx, {
                 // bar chart
                 type: 'pie',
                 data: data
-            }
+            },
             );
+
 
 
 
